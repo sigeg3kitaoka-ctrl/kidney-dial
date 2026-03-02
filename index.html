@@ -1706,6 +1706,54 @@
   }
 
 
+  /* 食材検索タブ */
+  .search-tab {
+    flex: 1;
+    padding: 9px 4px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text3);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .search-tab.active {
+    color: var(--accent2);
+    border-bottom-color: var(--accent2);
+    background: rgba(0,229,195,0.05);
+  }
+
+  /* 食材カードのcompact版 */
+  .food-option-compact {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .food-option-compact:active { background: var(--panel2); }
+  .foc-name { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; }
+  .foc-meta { font-size: 10px; color: var(--text3); white-space: nowrap; }
+  .foc-sig  { font-size: 16px; flex-shrink: 0; }
+
+  /* 再登録セクション */
+  .reuse-section-title {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    padding: 8px 14px 4px;
+    background: var(--panel2);
+    border-bottom: 1px solid var(--border);
+  }
+
   /* 期間選択ボタン */
   .period-btn {
     padding: 10px 6px;
@@ -2100,7 +2148,7 @@
             <span style="font-size:15px;">📋</span> あすけんから取り込む
           </button>
           <button class="add-btn" style="background:rgba(0,229,195,0.1);border-color:rgba(0,229,195,0.3);color:var(--accent2);" onclick="openScanModal()">📷</button>
-          <button class="add-btn" onclick="document.getElementById('modalOverlay').classList.add('show');filterFoods('')">🔍</button>
+          <button class="add-btn" onclick="openSearchModal()">🔍</button>
           <button class="add-btn" style="background:rgba(160,100,255,0.1);border-color:rgba(160,100,255,0.3);color:#c084fc;" onclick="openManualAddModal()">✏</button>
         </div>
       </div>
@@ -2664,16 +2712,29 @@
 
 
 <!-- Add food modal -->
-<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)this.classList.remove('show')">
-  <div class="modal">
-    <div class="modal-title">
-      食事を追加
-      <button class="close-btn" onclick="document.getElementById('modalOverlay').classList.remove('show')">✕</button>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeSearchModal()">
+  <div class="modal" style="max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <!-- ヘッダー（固定） -->
+    <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="modal-title" style="margin:0;flex:1;">食事を追加</div>
+        <button class="close-btn" onclick="closeSearchModal()">✕</button>
+      </div>
+      <!-- 検索ボックス -->
+      <input class="food-search" id="foodSearchInput" placeholder="🔍 食材・料理名を検索..." 
+        oninput="filterFoods(this.value)" autocomplete="off" style="margin-bottom:0;">
     </div>
-    <input class="food-search" placeholder="食材・料理名を検索..." oninput="filterFoods(this.value)">
 
-    <div id="foodOptions">
-      <!-- populated by JS -->
+    <!-- タブ（固定） -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button class="search-tab active" id="stab-recent" onclick="switchSearchTab('recent')">↩ 再登録</button>
+      <button class="search-tab" id="stab-all"    onclick="switchSearchTab('all')">📋 全食材</button>
+      <button class="search-tab" id="stab-ckd"    onclick="switchSearchTab('ckd')">💚 CKD向け</button>
+      <button class="search-tab" id="stab-warn"   onclick="switchSearchTab('warn')">⚠️ 要注意</button>
+    </div>
+
+    <!-- 結果リスト（スクロール） -->
+    <div id="foodOptions" style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;">
     </div>
   </div>
 </div>
@@ -2903,8 +2964,9 @@
           </div>
         </div>
         <div style="display:flex;gap:5px;flex-shrink:0;">
-          <button onclick="openEditModal(${i})" style="background:rgba(74,158,255,0.12);border:1px solid rgba(74,158,255,0.25);color:var(--accent);font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;min-height:40px;-webkit-tap-highlight-color:transparent;">✏</button>
-          <button onclick="deleteFood(${i})" style="background:rgba(255,87,87,0.1);border:1px solid rgba(255,87,87,0.25);color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;min-height:40px;-webkit-tap-highlight-color:transparent;">✕</button>
+          <button onclick="repeatFood(${i})" title="また食べた" style="background:rgba(0,229,195,0.1);border:1px solid rgba(0,229,195,0.25);color:var(--accent2);font-size:14px;padding:8px 10px;border-radius:8px;cursor:pointer;min-height:40px;-webkit-tap-highlight-color:transparent;">↩</button>
+          <button onclick="openEditModal(${i})" style="background:rgba(74,158,255,0.12);border:1px solid rgba(74,158,255,0.25);color:var(--accent);font-size:12px;padding:8px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;min-height:40px;-webkit-tap-highlight-color:transparent;">✏</button>
+          <button onclick="deleteFood(${i})" style="background:rgba(255,87,87,0.1);border:1px solid rgba(255,87,87,0.25);color:var(--red);font-size:12px;padding:8px 10px;border-radius:8px;cursor:pointer;min-height:40px;-webkit-tap-highlight-color:transparent;">✕</button>
         </div>
       </div>
     `).join('');
@@ -3629,34 +3691,149 @@ ${parts.map((s, i) => `${i+1}. ${s}`).join('\n')}
     scheduleSave();
     showToast(`${meta.label}に追加しました ✓`);
   }
-  function filterFoods(query) {
-    const container = document.getElementById('foodOptions');
-    const filtered = query.length > 0
-      ? FOOD_DB.filter(f => f.name.includes(query))
-      : FOOD_DB;
+  // 検索タブ状態
+  let currentSearchTab = 'recent';
 
-    container.innerHTML = filtered.map(f => `
-      <div class="food-option" onclick="addFood(${JSON.stringify(f).replace(/"/g,'&quot;')})">
-        <div>
-          <div class="fo-name">${f.name}</div>
-          <div class="fo-details">
-            <span>P:${f.p}g</span>
-            <span>K:${f.k}mg</span>
-            <span>塩:${f.salt}g</span>
-            <span>GI:${f.gi || '-'}</span>
+  function openSearchModal() {
+    currentSearchTab = 'recent';
+    document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+    const rt = document.getElementById('stab-recent');
+    if (rt) rt.classList.add('active');
+    const inp = document.getElementById('foodSearchInput');
+    if (inp) inp.value = '';
+    renderSearchTab('recent', '');
+    document.getElementById('modalOverlay').classList.add('show');
+    setTimeout(() => {
+      const inp2 = document.getElementById('foodSearchInput');
+      if (inp2) inp2.focus();
+    }, 200);
+  }
+
+  function closeSearchModal() {
+    document.getElementById('modalOverlay').classList.remove('show');
+  }
+
+  function switchSearchTab(tab) {
+    currentSearchTab = tab;
+    document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+    const el = document.getElementById('stab-' + tab);
+    if (el) el.classList.add('active');
+    const query = document.getElementById('foodSearchInput')?.value || '';
+    renderSearchTab(tab, query);
+  }
+
+  function filterFoods(query) {
+    renderSearchTab(currentSearchTab, query);
+  }
+
+  function renderSearchTab(tab, query) {
+    const container = document.getElementById('foodOptions');
+    if (!container) return;
+
+    // 検索クエリがあるときは全食材から検索（タブ無視）
+    if (query.length > 0) {
+      const results = FOOD_DB.filter(f => f.name.includes(query));
+      if (results.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px;">「' + query + '」の食材が見つかりません</div>';
+        return;
+      }
+      container.innerHTML = results.map(f => foodOptionHTML(f)).join('');
+      return;
+    }
+
+    // タブ別表示
+    if (tab === 'recent') {
+      renderRecentTab(container);
+    } else if (tab === 'all') {
+      container.innerHTML = FOOD_DB.map(f => foodOptionHTML(f)).join('');
+    } else if (tab === 'ckd') {
+      container.innerHTML = FOOD_DB.filter(f => f.signal === 'g').map(f => foodOptionHTML(f)).join('');
+    } else if (tab === 'warn') {
+      container.innerHTML = FOOD_DB.filter(f => f.signal === 'r' || f.signal === 'y').map(f => foodOptionHTML(f)).join('');
+    }
+  }
+
+  function renderRecentTab(container) {
+    const parts = [];
+
+    // 今日の食事記録から再登録候補
+    if (todayLog.length > 0) {
+      parts.push('<div class="reuse-section-title">TODAY — 今日の記録からワンタップ再登録</div>');
+      parts.push(todayLog.map((item, i) => `
+        <div class="food-option-compact" onclick="repeatFood(${i})">
+          <div class="foc-sig">${item.signal==='g'?'🟢':item.signal==='y'?'🟡':'🔴'}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="foc-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+            <div class="foc-meta">P ${item.p}g　塩 ${item.salt.toFixed(1)}g　${item.kcal}kcal</div>
           </div>
-        </div>
-        <div class="fo-signal ${f.signal}">${f.signal === 'g' ? '🟢' : f.signal === 'y' ? '🟡' : '🔴'}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);margin-left:8px;">${f.kcal}kcal</div>
+          <div style="font-size:11px;color:var(--accent2);white-space:nowrap;">↩ また食べた</div>
+        </div>`).join(''));
+    }
+
+    // 過去7日のよく食べた食事（日別履歴から）
+    try {
+      const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '{}');
+      const recentKeys = Object.keys(hist).sort().slice(-7);
+      // FOOD_DBからよく食べたものをカウント（今日の記録から）
+      const nameCounts = {};
+      todayLog.forEach(item => {
+        const clean = item.name.replace(/^(🌅 朝食：|☀ 昼食：|🌙 夕食：|🍡 間食：|🍽 )/, '');
+        nameCounts[clean] = (nameCounts[clean] || 0) + 1;
+      });
+      const topItems = Object.entries(nameCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      if (topItems.length > 0) {
+        parts.push('<div class="reuse-section-title">FREQUENT — 今日よく食べているもの</div>');
+        parts.push(topItems.map(([name, count]) => {
+          const f = FOOD_DB.find(fd => fd.name === name || fd.name.includes(name.slice(0,4)));
+          if (!f) return '';
+          return `<div class="food-option-compact" onclick="addFood(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+            <div class="foc-sig">${f.signal==='g'?'🟢':f.signal==='y'?'🟡':'🔴'}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="foc-name">${f.name}</div>
+              <div class="foc-meta">P ${f.p}g　塩 ${f.salt}g　${f.kcal}kcal</div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);">×${count}</div>
+          </div>`;
+        }).filter(Boolean).join(''));
+      }
+    } catch(e) {}
+
+    // よく使う定番食材（CKD向けおすすめ）
+    parts.push('<div class="reuse-section-title">BASICS — よく使う定番食材</div>');
+    const basics = FOOD_DB.filter(f => f.signal === 'g').slice(0, 12);
+    parts.push(basics.map(f => foodOptionHTML(f)).join(''));
+
+    container.innerHTML = parts.join('') || '<div style="text-align:center;color:var(--text3);padding:24px;">記録がまだありません</div>';
+  }
+
+  function foodOptionHTML(f) {
+    const sig = f.signal === 'g' ? '🟢' : f.signal === 'y' ? '🟡' : '🔴';
+    const d = JSON.stringify(f).replace(/"/g,'&quot;');
+    return `<div class="food-option-compact" onclick="addFood(${d})">
+      <div class="foc-sig">${sig}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="foc-name">${f.name}</div>
+        <div class="foc-meta">P ${f.p}g　K ${f.k}mg　塩 ${f.salt}g　${f.kcal}kcal</div>
       </div>
-    `).join('');
+    </div>`;
   }
 
   function addFood(f) {
     todayLog.push({ name: f.name, kcal: f.kcal, p: f.p, k: f.k, phos: f.phos, salt: f.salt, signal: f.signal });
-    document.getElementById('modalOverlay').classList.remove('show');
+    closeSearchModal();
     updateTodayView();
-    showToast(`${f.name} を追加しました`);
+    scheduleSave();
+    showToast(`${f.name} を追加しました ✓`);
+  }
+
+  function repeatFood(i) {
+    const item = todayLog[i];
+    if (!item) return;
+    todayLog.push({ ...item });
+    closeSearchModal();
+    updateTodayView();
+    scheduleSave();
+    showToast(`「${item.name}」を再登録しました ↩`);
   }
 
   // =================== AI Suggestions ===================
