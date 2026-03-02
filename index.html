@@ -2711,7 +2711,7 @@
   };
 
   // =================== State ===================
-  let targets = { protein:60, energy:1800, k:2000, phos:800, salt:5.0, carb:225, proteinWarn:null, saltWarn:null, energyWarn:null };
+  let targets = { protein:60, energy:1800, k:2000, phos:800, salt:5.0, carb:225, proteinAuto:60, saltAuto:5.0, energyAuto:1800 };
   let todayLog = [
     { name:'朝食：低たんぱくごはん+卵+みそ汁', kcal:320, p:8, k:180, phos:145, salt:1.2, signal:'g' },
     { name:'昼食：うどん+野菜天ぷら', kcal:580, p:18, k:320, phos:200, salt:1.8, signal:'g' },
@@ -2773,6 +2773,19 @@
     targets.salt = egfr >= 60 ? 6.0 : 5.0;
     targets.carb = Math.round(targets.energy * 0.5 / 4);
 
+    // 自動計算値を控え（主治医値で上書きされても参照できるように）
+    targets.proteinAuto = targets.protein;
+    targets.saltAuto    = targets.salt;
+    targets.energyAuto  = targets.energy;
+
+    // 主治医指示値が入力済みなら上書き
+    const dp = parseFloat(document.getElementById('doctorProtein')?.value);
+    const ds = parseFloat(document.getElementById('doctorSalt')?.value);
+    const de = parseFloat(document.getElementById('doctorEnergy')?.value);
+    if (!isNaN(dp) && dp > 0) targets.protein = dp;
+    if (!isNaN(ds) && ds > 0) targets.salt    = ds;
+    if (!isNaN(de) && de > 0) targets.energy  = de;
+
     document.getElementById('tProtein').textContent = targets.protein;
     document.getElementById('tEnergy').textContent = targets.energy;
     document.getElementById('tPotassium').textContent = targets.k;
@@ -2826,14 +2839,11 @@
       }
     };
 
-    const proteinWarnPct = targets.proteinWarn ? Math.round(targets.proteinWarn/targets.protein*100) : 85;
-    const saltWarnPct    = targets.saltWarn    ? Math.round(targets.saltWarn   /targets.salt   *100) : 85;
-    setBar('protein', t.p,    targets.protein, proteinWarnPct);
-    const energyWarnPct = targets.energyWarn ? Math.round(targets.energyWarn/targets.energy*100) : 95;
-    setBar('energy', t.kcal, targets.energy, energyWarnPct);
+    setBar('protein', t.p,    targets.protein, 85);
+    setBar('energy', t.kcal, targets.energy, 90);
     setBar('k', t.k, targets.k);
     setBar('p', t.phos, targets.phos);
-    setBar('salt', t.salt, targets.salt, saltWarnPct);
+    setBar('salt', t.salt, targets.salt, 85);
     setBar('carb', carb, targets.carb, 105);
 
     document.getElementById('pv-protein').textContent = t.p + 'g';
@@ -2843,54 +2853,30 @@
     document.getElementById('pv-salt').textContent = t.salt.toFixed(1) + 'g';
     document.getElementById('pv-carb').textContent = carb + 'g';
 
-    // Signals（主治医指示値がある場合は2段階：推奨超え=黄、上限超え=赤）
-    const sigColor = (val, hardLimit, warnLimit) => {
-      if (val > hardLimit) return 'red';
-      if (warnLimit && val > warnLimit) return 'yellow';
-      if (!warnLimit && val > hardLimit * 0.85) return 'yellow';
-      return 'green';
-    };
-    const pColor = sigColor(t.p,    targets.protein, targets.proteinWarn);
-    const sColor = sigColor(t.salt, targets.salt,    targets.saltWarn);
-    const ePct = t.kcal / targets.energy;
-
+    // Signals: targets.xxx は主治医値 or 自動計算値（既に正しい上限）
+    const sigColor = (val, limit) => val > limit ? 'red' : val > limit * 0.85 ? 'yellow' : 'green';
     const setSigColor = (id, color) => {
       const el = document.getElementById(`sig-${id}`);
-      if (el) { el.className = 'signal-item ' + color; }
+      if (el) el.className = 'signal-item ' + color;
     };
-    setSigColor('protein', pColor);
-    setSigColor('salt',    sColor);
+    setSigColor('protein', sigColor(t.p,    targets.protein));
+    setSigColor('salt',    sigColor(t.salt, targets.salt));
+    const ePct = t.kcal / targets.energy;
 
     // Energy: low is also a warning
     const eEl = document.getElementById('sig-energy');
     eEl.className = 'signal-item';
-    if (ePct > 1.0) {
-      eEl.classList.add('red');
-    } else if (targets.energyWarn && t.kcal > targets.energyWarn) {
-      eEl.classList.add('yellow');   // 指示値超え
-    } else if (!targets.energyWarn && (ePct > 0.95 || ePct < 0.6)) {
-      eEl.classList.add('yellow');   // デフォルト警戒
-    } else if (ePct < 0.6) {
-      eEl.classList.add('yellow');   // 摂取少なすぎ
-    } else {
-      eEl.classList.add('green');
-    }
+    if (ePct > 1.0)              eEl.classList.add('red');
+    else if (ePct > 0.9 || ePct < 0.6) eEl.classList.add('yellow');
+    else                         eEl.classList.add('green');
 
     document.getElementById('sigProtVal').textContent = t.p + 'g';
-    const pWarnRemain = targets.proteinWarn ? `推奨まで残${Math.max(0, targets.proteinWarn - t.p).toFixed(0)}g` : null;
-    const pHardRemain = `上限まで残${Math.max(0, targets.protein - t.p)}g`;
-    document.getElementById('sigProtPct').textContent = pWarnRemain || pHardRemain;
+    document.getElementById('sigProtPct').textContent = `あと${Math.max(0, targets.protein - t.p)}g`;
     document.getElementById('sigEnerVal').textContent = t.kcal.toLocaleString();
-    const eWarnRemain = targets.energyWarn
-      ? (t.kcal <= targets.energyWarn
-          ? `目標まで残${Math.max(0, targets.energyWarn - t.kcal)}kcal`
-          : `目標を${t.kcal - targets.energyWarn}kcal超過`)
-      : `残あと${Math.max(0, targets.energy - t.kcal)}kcal`;
-    document.getElementById('sigEnerPct').textContent = eWarnRemain;
+    const eRemain = targets.energy - t.kcal;
+    document.getElementById('sigEnerPct').textContent = eRemain >= 0 ? `残あと${eRemain}kcal` : `${-eRemain}kcal超過`;
     document.getElementById('sigSaltVal').textContent = t.salt.toFixed(1) + 'g';
-    const sWarnRemain = targets.saltWarn ? `推奨まで残${Math.max(0, targets.saltWarn - t.salt).toFixed(1)}g` : null;
-    const sHardRemain = `上限まで残${Math.max(0, targets.salt - t.salt).toFixed(1)}g`;
-    document.getElementById('sigSaltPct').textContent = sWarnRemain || sHardRemain;
+    document.getElementById('sigSaltPct').textContent = `あと${Math.max(0, targets.salt - t.salt).toFixed(1)}g`;
 
     renderFoodLog();
   }
@@ -3703,11 +3689,11 @@ ${parts.map((s, i) => `${i+1}. ${s}`).join('\n')}
 - 透析: ${dialysis==='no'?'なし（保存期）':dialysis==='hd'?'血液透析中':'腹膜透析中'}
 
 【本日の1日目標値】
-- タンパク質: ${targets.protein}g以下
-- エネルギー: ${targets.energy}kcal
+- タンパク質: ${targets.protein}g以下${targets.protein !== targets.proteinAuto ? `（主治医指示値 ※自動計算値${targets.proteinAuto}gより優先）` : '（自動計算値）'}
+- エネルギー: ${targets.energy}kcal${targets.energy !== targets.energyAuto ? `（主治医指示値）` : '（自動計算値）'}
 - カリウム: ${targets.k}mg以下
 - リン: ${targets.phos}mg以下
-- 塩分: ${targets.salt}g以下
+- 塩分: ${targets.salt}g以下${targets.salt !== targets.saltAuto ? `（主治医指示値）` : '（自動計算値）'}
 
 【本日の摂取状況（現時点）】
 - タンパク質: ${t.p}g / 残り${Math.max(0,targets.protein-t.p)}g
@@ -4142,15 +4128,20 @@ tr:nth-child(even) td { background:#f9fdfe; }
     const dp = parseFloat(document.getElementById('doctorProtein')?.value);
     const ds = parseFloat(document.getElementById('doctorSalt')?.value);
     const de = parseFloat(document.getElementById('doctorEnergy')?.value);
-    targets.proteinWarn = (!isNaN(dp) && dp > 0) ? dp : null;
-    targets.saltWarn    = (!isNaN(ds) && ds > 0) ? ds : null;
-    targets.energyWarn  = (!isNaN(de) && de > 0) ? de : null;
+    // 主治医値があればtargetsを上書き、なければ自動計算値に戻す
+    targets.protein = (!isNaN(dp) && dp > 0) ? dp : targets.proteinAuto;
+    targets.salt    = (!isNaN(ds) && ds > 0) ? ds : targets.saltAuto;
+    targets.energy  = (!isNaN(de) && de > 0) ? de : targets.energyAuto;
+    // 表示更新
+    const tpEl = document.getElementById('tProtein'); if(tpEl) tpEl.textContent = targets.protein;
+    const tsEl = document.getElementById('tSalt');    if(tsEl) tsEl.textContent = targets.salt.toFixed ? targets.salt.toFixed(1) : targets.salt;
+    const teEl = document.getElementById('tEnergy');  if(teEl) teEl.textContent = targets.energy;
     const parts = [];
-    if (targets.proteinWarn) parts.push(`P: 推奨${targets.proteinWarn}g`);
-    if (targets.saltWarn)    parts.push(`塩: 推奨${targets.saltWarn}g`);
-    if (targets.energyWarn)  parts.push(`Cal: ${targets.energyWarn}kcal目標`);
+    if (!isNaN(dp) && dp > 0) parts.push(`タンパク質 ${dp}g`);
+    if (!isNaN(ds) && ds > 0) parts.push(`塩分 ${ds}g`);
+    if (!isNaN(de) && de > 0) parts.push(`カロリー ${de}kcal`);
     const el = document.getElementById('doctorTargetStatus');
-    if (el) el.textContent = parts.length ? '✓ ' + parts.join(' / ') : '';
+    if (el) el.textContent = parts.length ? '✓ 主治医指示値を上限として使用中: ' + parts.join(' / ') : '（入力なし：自動計算値を使用）';
     scheduleSave();
     if (window._appReady) updateTodayView();
   }
