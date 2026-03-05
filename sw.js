@@ -1,5 +1,5 @@
 // KIDNEY-DIAL Service Worker - オフライン対応
-const CACHE_NAME = 'kidney-dial-v1';
+const CACHE_NAME = 'kidney-dial-v3';
 const ASSETS = [
   './index.html',
   './manifest.json',
