@@ -4399,12 +4399,12 @@ tr:nth-child(even) td { background:#f9fdfe; }
 
   function updateAIButtons() {
     const hasKey = !!getApiKey();
-    const genBtn = document.getElementById('aiGenerateBtn');
+    const genBtn   = document.getElementById('aiGenerateBtn');
     const noKeyDiv = document.getElementById('aiNoKeyButtons');
-    const banner = document.getElementById('noApiKeyBanner');
+    const banner   = document.getElementById('noApiKeyBanner');
     if (genBtn)   genBtn.style.display   = hasKey ? 'block' : 'none';
     if (noKeyDiv) noKeyDiv.style.display = hasKey ? 'none'  : 'block';
-    if (banner)   banner.style.display   = 'none'; // 初期はバナー非表示
+    if (banner)   banner.style.display   = hasKey ? 'none'  : 'block';
   }
 
   async function generateAIAdvice() {
