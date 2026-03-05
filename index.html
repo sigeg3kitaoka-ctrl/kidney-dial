@@ -1888,7 +1888,7 @@
           <span class="badge" id="ckdStageBadge">CKD G3a</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <input type="number" id="egfrSlider" min="1" max="150" step="0.1" value="45" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
+          <input type="number" id="egfrSlider" min="1" max="150" step="0.1" value="45" onclick="this.select()" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
           <span style="color:var(--text2);font-size:12px;white-space:nowrap;">mL/分<br>/1.73m²</span>
         </div>
         <div class="ckd-stage-bar">
@@ -1904,7 +1904,7 @@
       <div class="field-group">
         <div class="field-label">HbA1c</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <input type="number" id="hba1cSlider" min="4" max="15" step="0.1" value="7.2" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
+          <input type="number" id="hba1cSlider" min="4" max="15" step="0.1" value="7.2" onclick="this.select()" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
           <span style="color:var(--text2);font-size:12px;">%</span>
         </div>
         <div class="field-hint">目標: 7.0%未満</div>
@@ -1921,7 +1921,7 @@
       <div class="field-group">
         <div class="field-label">体重</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <input type="number" id="weightSlider" min="20" max="200" step="0.1" value="68" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
+          <input type="number" id="weightSlider" min="20" max="200" step="0.1" value="68" onclick="this.select()" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
           <span style="color:var(--text2);font-size:12px;">kg</span>
         </div>
         <div style="margin-top:8px;">
@@ -1939,7 +1939,7 @@
       <div class="field-group">
         <div class="field-label">クレアチニン</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <input type="number" id="creatSlider" min="0.1" max="20" step="0.01" value="1.40" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
+          <input type="number" id="creatSlider" min="0.1" max="20" step="0.01" value="1.40" onclick="this.select()" oninput="updateSetup()" onchange="scheduleSave()" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;-moz-appearance:textfield;">
           <span style="color:var(--text2);font-size:12px;">mg/dL</span>
         </div>
         <div style="margin-top:8px;">
@@ -2014,7 +2014,7 @@
             <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">タンパク質</div>
             <div style="display:flex;align-items:center;gap:4px;">
               <input type="number" id="doctorProtein" min="20" max="150" step="1" placeholder="60"
-                oninput="applyDoctorTargets()"
+                onclick="this.select()" oninput="applyDoctorTargets()"
                 style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:600;padding:6px 8px;border-radius:8px;outline:none;">
               <span style="color:var(--text3);font-size:10px;white-space:nowrap;">g</span>
             </div>
@@ -2023,7 +2023,7 @@
             <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">塩分</div>
             <div style="display:flex;align-items:center;gap:4px;">
               <input type="number" id="doctorSalt" min="1" max="15" step="0.5" placeholder="7"
-                oninput="applyDoctorTargets()"
+                onclick="this.select()" oninput="applyDoctorTargets()"
                 style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:600;padding:6px 8px;border-radius:8px;outline:none;">
               <span style="color:var(--text3);font-size:10px;white-space:nowrap;">g</span>
             </div>
@@ -2032,7 +2032,7 @@
             <div style="font-size:10px;color:var(--text2);margin-bottom:4px;">カロリー目標</div>
             <div style="display:flex;align-items:center;gap:4px;">
               <input type="number" id="doctorEnergy" min="800" max="3000" step="50" placeholder="1800"
-                oninput="applyDoctorTargets()"
+                onclick="this.select()" oninput="applyDoctorTargets()"
                 style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:600;padding:6px 8px;border-radius:8px;outline:none;">
               <span style="color:var(--text3);font-size:10px;white-space:nowrap;">kcal</span>
             </div>
