@@ -2583,16 +2583,16 @@
     <div style="background:rgba(74,158,255,0.06);border:1px solid rgba(74,158,255,0.2);border-radius:12px;padding:14px;margin-bottom:16px;">
       <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">🔒 キーの取得方法</div>
       <div style="font-size:12px;color:var(--text2);line-height:1.8;">
-        1. <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent);">console.anthropic.com</a> にアクセス<br>
-        2. 「API Keys」→「Create Key」でキーを発行<br>
-        3. <span style="font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:3px;">sk-ant-...</span> から始まるキーをコピー
+        1. <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a> にアクセス<br>
+        2. 「Create API key」でキーを発行<br>
+        3. <span style="font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:3px;">AIzaSy...</span> から始まるキーをコピー
       </div>
     </div>
 
     <div style="margin-bottom:12px;">
       <div class="field-label" style="margin-bottom:6px;">APIキー</div>
       <input id="apiKeyInput" type="password"
-        placeholder="sk-ant-api03-..."
+        placeholder="AIzaSy..."
         style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:12px 14px;border-radius:10px;outline:none;letter-spacing:1px;"
         onkeydown="if(event.key==='Enter')saveApiKeyFromModal()">
       <div style="font-size:10px;color:var(--text3);margin-top:6px;">⚠ キーはこのブラウザのLocalStorageにのみ保存されます。外部サーバーには送信されません。</div>
@@ -2606,7 +2606,7 @@
   </div>
 </div>
 
-<!-- ===== あすけん取り込みモーダル ===== -->
+<!-- ===== あすけん取り込みモーダル（Gemini画像読み取り版） ===== -->
 <div class="modal-overlay" id="askenModalOverlay" onclick="if(event.target===this)closeAskenModal()">
   <div class="modal" style="max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;max-width:600px;">
     <div class="modal-title">
@@ -2617,81 +2617,92 @@
       <button class="close-btn" onclick="closeAskenModal()">✕</button>
     </div>
 
-    <!-- スクショプレビュー（選択後に表示） -->
-    <div id="askenImgPreviewWrap" style="display:none;margin-bottom:14px;position:relative;">
-      <img id="askenPreviewImg" style="width:100%;border-radius:10px;border:1px solid var(--border);max-height:220px;object-fit:contain;background:#111;">
-      <button onclick="clearAskenImg()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.65);border:none;color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;cursor:pointer;">✕ 閉じる</button>
-    </div>
+    <!-- ステップ1: スクショ選択（メイン） -->
+    <div id="askenStep1" style="margin-bottom:16px;">
+      <div style="background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--accent2);font-weight:600;margin-bottom:4px;">📱 使い方</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.8;">
+          あすけん「アドバイス」→「摂取栄養素グラフ」を<br>
+          スクリーンショットして↓のボタンから選択するだけ
+        </div>
+      </div>
 
-    <!-- 画像選択ボタン（コンパクト） -->
-    <div id="askenImgSelectRow" style="margin-bottom:14px;">
-      <label for="askenFileInput2" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:rgba(74,158,255,0.06);border:1px dashed rgba(74,158,255,0.3);border-radius:10px;cursor:pointer;color:var(--accent);font-size:13px;-webkit-tap-highlight-color:transparent;">
-        <span>🖼️</span><span>あすけんのスクショを横に表示する（任意）</span>
+      <!-- スクショ選択ボタン（大きく） -->
+      <label for="askenFileInput" id="askenUploadLabel"
+        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px 16px;background:rgba(74,158,255,0.06);border:2px dashed rgba(74,158,255,0.4);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.2s;">
+        <span style="font-size:36px;">📸</span>
+        <span style="color:var(--accent);font-size:14px;font-weight:600;">あすけんのスクショを選択</span>
+        <span style="color:var(--text3);font-size:11px;">タップしてカメラロールから選ぶ</span>
       </label>
-      <input type="file" id="askenFileInput2" accept="image/*" style="display:none" onchange="previewAskenImg(this.files[0])">
-    </div>
+      <input type="file" id="askenFileInput" accept="image/*" style="display:none" onchange="handleAskenImage(this.files[0])">
 
-    <!-- 説明 -->
-    <div style="background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.2);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
-      <div style="font-size:12px;color:var(--accent2);font-weight:600;margin-bottom:6px;">📱 あすけん「アドバイス」→「摂取栄養素グラフ」の数値を入力</div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.7;">画面右端の「摂取量」の数値をそのまま入力してください。<br>リンはあすけんに表示されないため自動で推定します。</div>
-    </div>
-
-    <!-- 入力フォーム -->
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-
-      <div class="asken-field">
-        <div class="asken-field-label">⚡ エネルギー</div>
-        <div class="asken-field-input-wrap">
-          <input id="af-kcal" type="number" class="asken-num-input" placeholder="例: 1559" inputmode="decimal">
-          <span class="asken-field-unit">kcal</span>
-        </div>
+      <!-- プレビュー（選択後） -->
+      <div id="askenPreviewWrap" style="display:none;margin-top:12px;position:relative;">
+        <img id="askenPreviewImg" style="width:100%;border-radius:10px;border:1px solid var(--border);max-height:200px;object-fit:contain;background:var(--panel2);">
+        <button onclick="resetAskenModal()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.65);border:none;color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;cursor:pointer;">✕ やり直す</button>
       </div>
 
-      <div class="asken-field">
-        <div class="asken-field-label">🥩 たんぱく質</div>
-        <div class="asken-field-input-wrap">
-          <input id="af-p" type="number" step="0.1" class="asken-num-input" placeholder="例: 67.2" inputmode="decimal">
-          <span class="asken-field-unit">g</span>
-        </div>
-      </div>
-
-      <div class="asken-field">
-        <div class="asken-field-label">🍚 糖質</div>
-        <div class="asken-field-input-wrap">
-          <input id="af-carb" type="number" step="0.1" class="asken-num-input" placeholder="例: 180.6" inputmode="decimal">
-          <span class="asken-field-unit">g</span>
-        </div>
-      </div>
-
-      <div class="asken-field">
-        <div class="asken-field-label">🍌 カリウム</div>
-        <div class="asken-field-input-wrap">
-          <input id="af-k" type="number" class="asken-num-input" placeholder="例: 2781" inputmode="decimal">
-          <span class="asken-field-unit">mg</span>
-        </div>
-      </div>
-
-      <div class="asken-field">
-        <div class="asken-field-label">🧂 塩分</div>
-        <div class="asken-field-input-wrap">
-          <input id="af-salt" type="number" step="0.1" class="asken-num-input" placeholder="例: 8.6" inputmode="decimal">
-          <span class="asken-field-unit">g</span>
-        </div>
-      </div>
-
-      <div class="asken-field" style="background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;padding:10px;">
-        <div class="asken-field-label" style="color:var(--text3);">🔬 リン（自動推定）</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:var(--text3);margin-top:4px;" id="af-phos-display">— mg</div>
-        <div style="font-size:9px;color:var(--text3);margin-top:2px;">たんぱく質 × 15 で算出</div>
+      <!-- Gemini読み取り中 -->
+      <div id="askenReadingStatus" style="display:none;text-align:center;padding:16px;color:var(--accent2);font-size:13px;">
+        <div style="font-size:24px;margin-bottom:8px;">🤖</div>
+        Geminiが栄養素を読み取り中...
       </div>
     </div>
 
-    <!-- 解析ボタン -->
-    <button class="calc-btn" onclick="submitAskenForm()" style="background:linear-gradient(135deg,#00e5c3,#0097a7);">
-      ✓ 解析してダッシュボードに反映
-    </button>
-    <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px;">入力後すぐにCKD・血糖管理の判定が表示されます</div>
+    <!-- ステップ2: 読み取り結果確認・修正 -->
+    <div id="askenStep2" style="display:none;">
+      <div style="font-size:12px;color:var(--accent2);font-weight:600;margin-bottom:10px;">✓ 読み取り結果（修正できます）</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <div class="asken-field">
+          <div class="asken-field-label">⚡ エネルギー</div>
+          <div class="asken-field-input-wrap">
+            <input id="af-kcal" type="number" class="asken-num-input" placeholder="例: 1559" inputmode="decimal" onclick="this.select()">
+            <span class="asken-field-unit">kcal</span>
+          </div>
+        </div>
+        <div class="asken-field">
+          <div class="asken-field-label">🥩 たんぱく質</div>
+          <div class="asken-field-input-wrap">
+            <input id="af-p" type="number" step="0.1" class="asken-num-input" placeholder="例: 67.2" inputmode="decimal" onclick="this.select()">
+            <span class="asken-field-unit">g</span>
+          </div>
+        </div>
+        <div class="asken-field">
+          <div class="asken-field-label">🍚 糖質</div>
+          <div class="asken-field-input-wrap">
+            <input id="af-carb" type="number" step="0.1" class="asken-num-input" placeholder="例: 180.6" inputmode="decimal" onclick="this.select()">
+            <span class="asken-field-unit">g</span>
+          </div>
+        </div>
+        <div class="asken-field">
+          <div class="asken-field-label">🍌 カリウム</div>
+          <div class="asken-field-input-wrap">
+            <input id="af-k" type="number" class="asken-num-input" placeholder="例: 2781" inputmode="decimal" onclick="this.select()">
+            <span class="asken-field-unit">mg</span>
+          </div>
+        </div>
+        <div class="asken-field">
+          <div class="asken-field-label">🧂 塩分</div>
+          <div class="asken-field-input-wrap">
+            <input id="af-salt" type="number" step="0.1" class="asken-num-input" placeholder="例: 8.6" inputmode="decimal" onclick="this.select()">
+            <span class="asken-field-unit">g</span>
+          </div>
+        </div>
+        <div class="asken-field" style="background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;padding:10px;">
+          <div class="asken-field-label" style="color:var(--text3);">🔬 リン（自動推定）</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:var(--text3);margin-top:4px;" id="af-phos-display">— mg</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px;">たんぱく質 × 15 で算出</div>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="submitAskenForm()" style="background:linear-gradient(135deg,#00e5c3,#0097a7);">
+        ✓ ダッシュボードに反映
+      </button>
+      <div style="text-align:center;margin-top:10px;">
+        <button onclick="resetAskenModal()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;text-decoration:underline;">← スクショを選び直す</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3512,17 +3523,7 @@
 variantsは2〜5件。gramsは実際の重量（g/mL）で。`;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: apiHeaders(),
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 300,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const data = await res.json();
-      const text = data.content?.[0]?.text || '';
+      const text = await callGeminiJSON(prompt, 300);
       const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
 
       // Validate
@@ -3623,13 +3624,7 @@ ${parts.map((s, i) => `${i+1}. ${s}`).join('\n')}
 {"kcal":数値,"protein":数値,"carb":数値,"potassium":数値,"phosphorus":数値,"salt":数値,"note":"補足"}`;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: apiHeaders(),
-        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:400, messages:[{role:'user',content:prompt}] })
-      });
-      const data = await res.json();
-      const text = data.content?.[0]?.text || '';
+      const text = await callGeminiJSON(prompt, 400);
       const n = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
       const prefix = isEdit ? 'edit' : 'manualAdd';
       document.getElementById(prefix + 'Kcal').value    = Math.round(n.kcal || 0);
@@ -3911,21 +3906,52 @@ ${parts.map((s, i) => `${i+1}. ${s}`).join('\n')}
 ${todayLog.map(item=>`- ${item.name}（${item.kcal}kcal, P:${item.p}g, K:${item.k}mg, 塩:${item.salt}g）`).join('\n')}`;
   }
 
-  async function callClaude(userMessage, systemPrompt) {
-    const messages = [...chatHistory, { role: 'user', content: userMessage }];
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+  async function callGemini(userMessage, systemPrompt) {
+    const key = getApiKey();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    // chatHistoryをGemini形式に変換
+    const history = chatHistory.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+    const contents = [
+      ...history,
+      { role: 'user', parts: [{ text: userMessage }] }
+    ];
+    const response = await fetch(url, {
       method: 'POST',
-      headers: apiHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: messages,
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
       })
     });
     const data = await response.json();
-    const reply = data.content?.[0]?.text || 'エラーが発生しました。しばらくしてから再試行してください。';
-    return reply;
+    if (data.error) throw new Error(data.error.message);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'エラーが発生しました。';
+  }
+
+  // 単発JSON生成用（AIで栄養素計算・量バリアント取得）
+  async function callGeminiJSON(prompt, maxTokens=400) {
+    const key = getApiKey();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.2 }
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  // 後方互換（callClaudeを呼んでいる箇所をすべてcallGeminiに転送）
+  async function callClaude(userMessage, systemPrompt) {
+    return callGemini(userMessage, systemPrompt);
   }
 
   // Claude.aiでデータ解析（APIキーなし代替）
@@ -5050,7 +5076,7 @@ suggestionsは3〜4件。必ずタンパク質・カリウム・塩分の制限�
   // ═══════════════════════════════════════════════════
   // APIキー管理
   // ═══════════════════════════════════════════════════
-  const API_KEY_STORAGE = 'kidneyDial_apiKey';
+  const API_KEY_STORAGE = 'kidneyDial_geminiKey';
 
   function getApiKey() {
     return localStorage.getItem(API_KEY_STORAGE) || '';
@@ -5061,13 +5087,7 @@ suggestionsは3〜4件。必ずタンパク質・カリウム・塩分の制限�
   }
 
   function apiHeaders() {
-    const key = getApiKey();
-    return {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    };
+    return { 'Content-Type': 'application/json' };
   }
 
   function requireApiKey() {
@@ -5091,8 +5111,8 @@ suggestionsは3〜4件。必ずタンパク質・カリウム・塩分の制限�
 
   function saveApiKeyFromModal() {
     const val = document.getElementById('apiKeyInput').value.trim();
-    if (!val.startsWith('sk-ant-')) {
-      showToast('⚠ APIキーは sk-ant- から始まります');
+    if (!val.startsWith('AIza')) {
+      showToast('⚠ Gemini APIキーは AIza から始まります');
       return;
     }
     saveApiKey(val);
@@ -5494,27 +5514,30 @@ suggestionsは3〜4件。必ずタンパク質・カリウム・塩分の制限�
   let askenParsedData = null;
 
   function openAskenModal() {
+    // フォームリセット
     ['af-kcal','af-p','af-carb','af-k','af-salt'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
+      const el = document.getElementById(id); if (el) el.value = '';
     });
     const phosDisp = document.getElementById('af-phos-display');
     if (phosDisp) phosDisp.textContent = '— mg';
-    const prevWrap = document.getElementById('askenImgPreviewWrap');
-    if (prevWrap) prevWrap.style.display = 'none';
-    const selRow = document.getElementById('askenImgSelectRow');
-    if (selRow) selRow.style.display = 'block';
-
     // たんぱく質入力でリン自動計算
     const pInput = document.getElementById('af-p');
-    if (pInput) {
-      pInput.oninput = () => {
-        const p = parseFloat(pInput.value) || 0;
-        if (phosDisp) phosDisp.textContent = p > 0 ? `約 ${Math.round(p * 15)} mg` : '— mg';
-      };
-    }
+    if (pInput) pInput.oninput = () => {
+      const p = parseFloat(pInput.value) || 0;
+      if (phosDisp) phosDisp.textContent = p > 0 ? `約 ${Math.round(p * 15)} mg` : '— mg';
+    };
+    // ステップ1表示
+    const s1 = document.getElementById('askenStep1');
+    const s2 = document.getElementById('askenStep2');
+    const pw = document.getElementById('askenPreviewWrap');
+    const rs = document.getElementById('askenReadingStatus');
+    if (s1) s1.style.display = 'block';
+    if (s2) s2.style.display = 'none';
+    if (pw) pw.style.display = 'none';
+    if (rs) rs.style.display = 'none';
+    const fi = document.getElementById('askenFileInput');
+    if (fi) fi.value = '';
     document.getElementById('askenModalOverlay').classList.add('show');
-    setTimeout(() => document.getElementById('af-kcal')?.focus(), 350);
   }
 
   function closeAskenModal() {
@@ -5522,32 +5545,81 @@ suggestionsは3〜4件。必ずタンパク質・カリウム・塩分の制限�
   }
 
   function resetAskenModal() { openAskenModal(); }
-  function showAskenStep() {}
-  function handleAskenFile() {}
-  function handleAskenDrop(e) { e.preventDefault(); }
-  function handleAskenPaste() {}
 
-  function previewAskenImg(file) {
+  async function handleAskenImage(file) {
     if (!file) return;
+    if (!requireApiKey()) return;
+
+    // プレビュー表示
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async (e) => {
+      const base64 = e.target.result.split(',')[1];
+      const mimeType = file.type || 'image/jpeg';
+
+      const pw = document.getElementById('askenPreviewWrap');
       const img = document.getElementById('askenPreviewImg');
+      const rs = document.getElementById('askenReadingStatus');
       if (img) img.src = e.target.result;
-      const wrap = document.getElementById('askenImgPreviewWrap');
-      if (wrap) wrap.style.display = 'block';
-      const row = document.getElementById('askenImgSelectRow');
-      if (row) row.style.display = 'none';
+      if (pw) pw.style.display = 'block';
+      if (rs) rs.style.display = 'block';
+
+      try {
+        const key = getApiKey();
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+        const prompt = `これはあすけんアプリの「摂取栄養素グラフ」の画面です。
+以下の栄養素の「摂取量」の数値を読み取り、JSONのみで返答してください（前置き不要）：
+{"kcal":数値,"protein":数値,"carb":数値,"potassium":数値,"salt":数値}
+- kcal: エネルギー（kcal）
+- protein: たんぱく質（g）
+- carb: 炭水化物または糖質（g）
+- potassium: カリウム（mg）。表示がない場合は0
+- salt: 食塩相当量または塩分（g）
+数値は小数点を含む場合そのまま記載。読み取れない項目は0とする。`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              role: 'user',
+              parts: [
+                { inline_data: { mime_type: mimeType, data: base64 } },
+                { text: prompt }
+              ]
+            }],
+            generationConfig: { maxOutputTokens: 200, temperature: 0.1 }
+          })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const n = JSON.parse(text.match(/\{[\s\S]*?\}/)[0]);
+
+        // フォームに反映
+        if (n.kcal)     document.getElementById('af-kcal').value  = Math.round(n.kcal);
+        if (n.protein)  document.getElementById('af-p').value     = Math.round(n.protein * 10) / 10;
+        if (n.carb)     document.getElementById('af-carb').value  = Math.round(n.carb * 10) / 10;
+        if (n.potassium)document.getElementById('af-k').value     = Math.round(n.potassium);
+        if (n.salt)     document.getElementById('af-salt').value  = Math.round(n.salt * 10) / 10;
+        const phos = Math.round((n.protein || 0) * 15);
+        const phosDisp = document.getElementById('af-phos-display');
+        if (phosDisp) phosDisp.textContent = `約 ${phos} mg`;
+
+        // ステップ2へ
+        if (rs) rs.style.display = 'none';
+        const s2 = document.getElementById('askenStep2');
+        if (s2) s2.style.display = 'block';
+        showToast('✓ Geminiが栄養素を読み取りました');
+
+      } catch(err) {
+        if (rs) rs.style.display = 'none';
+        showToast('⚠ 読み取りに失敗しました。手動で入力してください');
+        // 失敗してもステップ2を表示して手動入力できるように
+        const s2 = document.getElementById('askenStep2');
+        if (s2) s2.style.display = 'block';
+      }
     };
     reader.readAsDataURL(file);
-  }
-
-  function clearAskenImg() {
-    const wrap = document.getElementById('askenImgPreviewWrap');
-    if (wrap) wrap.style.display = 'none';
-    const row = document.getElementById('askenImgSelectRow');
-    if (row) row.style.display = 'block';
-    const fi = document.getElementById('askenFileInput2');
-    if (fi) fi.value = '';
   }
 
   function submitAskenForm() {
