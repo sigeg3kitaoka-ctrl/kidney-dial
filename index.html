@@ -4302,13 +4302,7 @@ tr:nth-child(even) td { background:#f9fdfe; }
     document.querySelectorAll('.meal-timing-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     // ステータステキストを更新
-    const labels = { breakfast:'朝食後', lunch:'昼食後', dinner:'夕食後', full:'1日分完了' 
-    // 1日分完了時だけ履歴に確定保存
-    if (timing === 'full') {
-      saveDayHistory();
-      showToast('📅 1日分を記録として保存しました ✓');
-    }
-  };
+    const labels = { breakfast:'朝食後', lunch:'昼食後', dinner:'夕食後', full:'1日分完了' };
     const hints  = {
       breakfast: '朝食の記録をもとに、昼・夕のアドバイスを生成します',
       lunch:     '朝・昼の記録をもとに、夕食のアドバイスを生成します',
@@ -4317,6 +4311,11 @@ tr:nth-child(even) td { background:#f9fdfe; }
     };
     const statusEl = document.getElementById('aiStatusText');
     if (statusEl) statusEl.innerHTML = `<strong>${labels[timing]}</strong>として解析：${hints[timing]}`;
+    // 1日分完了時だけ履歴に確定保存
+    if (timing === 'full') {
+      saveDayHistory();
+      showToast('📅 1日分を記録として保存しました ✓');
+    }
   }
 
   function buildTimingContext() {
